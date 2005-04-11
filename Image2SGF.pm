@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 package Games::Go::Image2SGF;
-our $VERSION = '1.02';
+our $VERSION = '1.03';
 
 =cut
 
@@ -31,8 +31,8 @@ of the position.
 =head1 OPTIONS
 
 Options are passed to B<Games::Go::ImageSGF> via its constructor.  It will 
-attempt to use sane defaults for options you don't supply; arguments must 
-be supplied for the required options. 
+attempt to use sane defaults for arguments you don't supply; you must supply
+values for the required arguments. 
 
 =over 4
 
@@ -51,17 +51,17 @@ supported by I<Imager>.
 
 Optional.  A fairly-representative colour for the white stones, black stones, 
 and go board itself, presented in decimal RGB triplets -- eg. C<[255,255,255]> 
-for white.  You should only set these if the generated SGF is incorrect.
-Default:  Black is C<[0,0,0]>, white is C<[255,255,255]>, board colour is 
-C<[100,100,100]>.
+for white.  You should only set these if the defaults are generating incorrect
+SGF.  Default:  Black is C<[0,0,0]>, white is C<[255,255,255]>, board colour 
+is C<[100,100,100]>.
 
 =item sample_radius
 
 Optional.  After inferring the grid from the corner points you give, the 
-module will search in a radius of C<sample_radius> pixels to look for stones 
-of a particular colour.  As with the C<white, black, board> options:  the 
-default is likely to do the right thing, and you should only increase or 
-decrease it if your image is very large or very small.  Default:  10 pixels.
+module will search in a radius of C<sample_radius> pixels to look at the
+area's colour.  As with the C<white, black, board> arguments, the default 
+is likely to do the right thing; you should only need to change this if
+your image is very large or very small.  Default:  10 pixels.
 
 =back
 
@@ -92,9 +92,9 @@ use constant BOARDSIZE => 19;
 use constant BOARD     => 0;
 use constant WHITE     => 1;
 use constant BLACK     => 2;
-use constant X => 0;
-use constant Y => 1;
-use constant EPSILON => 0.0001;
+use constant X         => 0;
+use constant Y         => 1;
+use constant EPSILON   => 0.0001;
 
 use strict;
 use Imager;
@@ -157,9 +157,9 @@ sub find_intersections {
 
     $self->invert_coords;
 
-    #  Find the equations for the lines connecting the four sides.
-    #  Lines are defined by their slope (m) and yintercept (b) with
-    #  the line equation:  y = mx + b.
+    # Find the equations for the lines connecting the four sides.
+    # Lines are defined by their slope (m) and yintercept (b) with
+    # the line equation:  y = mx + b.
     my $m_left = ($self->{tl}[Y] - $self->{bl}[Y]) /
                  ($self->{tl}[X] - $self->{bl}[X]);
     my $b_left = $self->{bl}[Y] - ($m_left * $self->{bl}[X]);
@@ -176,18 +176,18 @@ sub find_intersections {
                    ($self->{br}[X] - $self->{bl}[X]);
     my $b_bottom = $self->{bl}[Y] - ($m_bottom * $self->{bl}[X]);
 
-    # Find the "vanishing points" for the grid the board forms. These will be a 
+    # Find the "vanishing points" for the grid the board forms. These are a 
     # "vertical vanishing point" (vvp) for the intersection of left and right 
     # lines, and a "horizontal vanishing point" (hvp) for top and bottom 
-    # intersection. There is the possibility that two lines are perfectly 
+    # intersection.  There is the possibility that two lines are perfectly 
     # parallel -- we check this first and create a very small difference if 
-    # we're going to be generating a SIGFPE. 
+    # we would otherwise generate a SIGFPE. 
     if ($m_top == $m_bottom) { 
-		$m_top += EPSILON;
-	}
+        $m_top += EPSILON;
+    }
     if ($m_left == $m_right) {
-		$m_left += EPSILON;
-	}
+        $m_left += EPSILON;
+    }
 
     my $x_vvp = ($b_right - $b_left) / ($m_left - $m_right);
     my $y_vvp = ($m_left * $x_vvp) + $b_left;
@@ -268,8 +268,10 @@ sub find_intersections {
 
     for my $i (1 .. BOARDSIZE) {
       for my $j (1 .. BOARDSIZE) {
-        my $x_vertex = ($self->{horiz_b_hash}[$i] - $self->{vert_b_hash}[$j]) / ($self->{vert_m_hash}[$j] - $self->{horiz_m_hash}[$i]);
-        my $y_vertex = ($self->{horiz_m_hash}[$i] * $x_vertex) + $self->{horiz_b_hash}[$i];
+        my $x_vertex = ($self->{horiz_b_hash}[$i] - $self->{vert_b_hash}[$j]) / 
+                       ($self->{vert_m_hash}[$j] - $self->{horiz_m_hash}[$i]);
+        my $y_vertex = ($self->{horiz_m_hash}[$i] * $x_vertex) + 
+                       $self->{horiz_b_hash}[$i];
         # Coordinate system:
         # intersection [3,5] is third from top, fifth from left
         $self->{intersection}[$i][$j] = [ $x_vertex, -1 * $y_vertex ];
@@ -293,7 +295,7 @@ sub sample {
     for (my $k = ($x_vertex - $radius); $k <= ($x_vertex + $radius); $k++) {
         for (my $l = ($y_vertex - $radius); $l <= ($y_vertex + $radius); $l++) {
              if (($x_vertex - $k)**2 + ($y_vertex - $l)**2 <= ($radius**2)) {
-				# If this is true, then the point ($k, $l) is in our circle.
+                # If this is true, then the point ($k, $l) is in our circle.
                 # Now we sample at it.
                 my $gp = $self->{img}->getpixel('x' => $k, 'y' => $l);
                 next if $gp == undef;
