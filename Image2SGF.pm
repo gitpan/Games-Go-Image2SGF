@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 package Games::Go::Image2SGF;
-our $VERSION = '1.00';
+our $VERSION = '1.01';
 
 =cut
 
@@ -24,22 +24,23 @@ Games::Go::Image2SGF -- interpret photographs of go positions.
 
 =head1 DESCRIPTION
 
-B<Games::Go::Image2SGF> is a I<perl5> module to create a computer-readable I<SGF>
-format description of a position on a Go board, given a photograph of the position.
+B<Games::Go::Image2SGF> is a I<perl5> module to create a computer-readable 
+I<SGF> format description of the position on a Go board, given a photograph 
+of the position.
 
 =head1 OPTIONS
 
-Options are passed to B<Games::Go::ImageSGF> via its constructor.  It will attempt
-to use sane defaults for options you don't supply; keys must be supplied for the
-required options. 
+Options are passed to B<Games::Go::ImageSGF> via its constructor.  It will 
+attempt to use sane defaults for options you don't supply; arguments must 
+be supplied for the required options. 
 
 =over 4
 
 =item tl, tr, bl, br
 
-Required.  The coordinates of the four corners of the go board's grid.  You can obtain 
-these by loading your photograph in an image editor that displays image coordinates
-and hovering the cursor over each of the grid corners. 
+Required.  The coordinates of the four corners of the go board's grid.  You 
+can obtain these by loading your photograph in an image editor that displays 
+image coordinates and hovering the cursor over each of the grid corners. 
 
 =item white, black, board
 
@@ -56,11 +57,11 @@ supported by I<Imager>.
 
 =item sample_radius
 
-Optional.  After inferring the grid from the corner points you give, the module
-will search in a radius of C<sample_radius> pixels to look for stones of a
-particular colour.  As with C<white, black, board>:  the default is likely to
-do the right thing, and you should only increase or decrease it if your image 
-is very large or very small.
+Optional.  After inferring the grid from the corner points you give, the 
+module will search in a radius of C<sample_radius> pixels to look for stones 
+of a particular colour.  As with the C<white, black, board> options:  the 
+default is likely to do the right thing, and you should only increase or 
+decrease it if your image is very large or very small.
 Default:  10 pixels.
 
 =back
@@ -78,7 +79,9 @@ C<Imager>, C<perl5>.
 
 =head1 SEE ALSO
 
-Examples of use at L<http://www.inference.phy.cam.ac.uk/cjb/>.
+Further examples at L<http://www.inference.phy.cam.ac.uk/cjb/image2sgf.html>,
+the L<http://www.red-bean.com/sgf/> SGF standard, and the collaborative guide
+to Go at L<http://senseis.xmp.net/>.
 
 =head1 AUTHOR
 
@@ -99,7 +102,7 @@ use Imager;
 sub new {
     
     # Set up some initial defaults.  These are overridden by the user
-    # in their constructor.  Only white/black/board are optional.
+    # in their constructor.  White/black/board/sample_radius are optional.
     my $self = bless {
         white         => [255,255,255],
         black         => [0,0,0],
@@ -158,16 +161,20 @@ sub find_intersections {
     #  Lines are defined by their slope (m) and yintercept (b) with
     #  the line equation:  y = mx + b.
     
-    my $m_left = ($self->{tl}[Y] - $self->{bl}[Y]) / ($self->{tl}[X] - $self->{bl}[X]);
+    my $m_left = ($self->{tl}[Y] - $self->{bl}[Y]) /
+                 ($self->{tl}[X] - $self->{bl}[X]);
     my $b_left = $self->{bl}[Y] - ($m_left * $self->{bl}[X]);
 
-    my $m_right = ($self->{tr}[Y] - $self->{br}[Y]) / ($self->{tr}[X] - $self->{br}[X]);
+    my $m_right = ($self->{tr}[Y] - $self->{br}[Y]) / 
+                  ($self->{tr}[X] - $self->{br}[X]);
     my $b_right = $self->{br}[Y] - ($m_right * $self->{br}[X]);
 
-    my $m_top = ($self->{tr}[Y] - $self->{tl}[Y]) / ($self->{tr}[X] - $self->{tl}[X]);
+    my $m_top = ($self->{tr}[Y] - $self->{tl}[Y]) / 
+                ($self->{tr}[X] - $self->{tl}[X]);
     my $b_top = $self->{tl}[Y] - ($m_top * $self->{tl}[X]);
 
-    my $m_bottom = ($self->{br}[Y] - $self->{bl}[Y]) / ($self->{br}[X] - $self->{bl}[X]);
+    my $m_bottom = ($self->{br}[Y] - $self->{bl}[Y]) / 
+                   ($self->{br}[X] - $self->{bl}[X]);
     my $b_bottom = $self->{bl}[Y] - ($m_bottom * $self->{bl}[X]);
 
     # Find the "vanishing points" for the grid the board forms. These will be a 
